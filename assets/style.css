@@ -114,7 +114,6 @@ body {
 .Select span {
   font: 400 1rem 'Ubuntu', sans-serif;
   color: #fff;
-  z-index: 1;
 }
 
 .Select--multi .Select-value {
