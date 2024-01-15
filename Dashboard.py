@@ -45,13 +45,13 @@ app.layout = html.Div([
                 className="curso-container",
                 children=[
                     html.H4(children='Cursos:'),
-                    dcc.Dropdown(options=[{'label': curso, 'value': curso} for curso in cursos], value='MEDICINA', id='dropdown-cursos', multi=True, placeholder='Selecione um curso...')
+                    dcc.Dropdown(options=[{'label': curso, 'value': curso} for curso in cursos], id='dropdown-cursos', multi=True, placeholder='Selecione um curso...')
                 ]),
             html.Div(
                 className="estado-container",
                 children=[
                     html.H4(children='Estados:'),
-                    dcc.Dropdown(options=[{'label': estado, 'value': estado} for estado in estados], value=estados, id='dropdown-estados', multi=True, placeholder='Selecione um estado...'),
+                    dcc.Dropdown(options=[{'label': estado, 'value': estado} for estado in estados], id='dropdown-estados', multi=True, placeholder='Selecione um estado...'),
                 ]),
 
             html.Div(
@@ -82,23 +82,35 @@ app.layout = html.Div([
      Output('graph-notas-ies', 'figure'),
      Output('numero_vagas', 'children')],
     [Input('dropdown-cursos', 'value'),
-     Input('dropdown-estados', 'value')]
+     Input('dropdown-estados', 'value'),
+     Input('dropdown-ies', 'value')]
 )
-def update_graph(cursos, estados):
-    if not cursos or not estados:
-        return go.Figure(), go.Figure(), go.Figure(), "Total de Vagas: 0"
+def update_graph(selected_cursos, selected_estados, selected_ies):
+    if not selected_cursos or not selected_estados:
+        return px.bar(), px.bar(), px.bar(), "Total de Vagas: 0"
 
-    cursos = [cursos] if isinstance(cursos, str) else cursos
-    estados = [estados] if isinstance(estados, str) else estados
+    selected_cursos = [selected_cursos] if isinstance(selected_cursos, str) else selected_cursos
+    selected_estados = [selected_estados] if isinstance(selected_estados, str) else selected_estados
 
-    dff = df_sisu[(df_sisu['NO_CURSO'].isin(cursos)) &
-                  (df_sisu['SG_UF_IES'].isin(estados))]
-    
+    # Check if selected_ies is not None before using it in isin()
+    if selected_ies is not None:
+        selected_ies = [selected_ies] if isinstance(selected_ies, str) else selected_ies
+        dff = df_sisu[
+            (df_sisu['NO_CURSO'].isin(selected_cursos)) &
+            (df_sisu['SG_UF_IES'].isin(selected_estados)) &
+            (df_sisu['SG_IES'].isin(selected_ies))
+        ]
+    else:
+        dff = df_sisu[
+            (df_sisu['NO_CURSO'].isin(selected_cursos)) &
+            (df_sisu['SG_UF_IES'].isin(selected_estados))
+        ]
+
     if dff.empty:
         return px.bar(), px.bar(), px.bar(), "Total de Vagas: 0"
 
     numero_vagas = dff.shape[0]
-    
+
     dff_vagas = dff.groupby('SG_UF_IES').count().reset_index()
     graph1 = px.bar(dff_vagas, x='SG_UF_IES', y='QT_VAGAS_CONCORRENCIA')
     graph1.update_xaxes(title_text='Estados')
@@ -147,4 +159,6 @@ def update_graph(cursos, estados):
     return graph1, graph2, graph3, f'Total de Vagas: {numero_vagas}'
 
 if __name__ == '__main__':
+    from werkzeug.serving import WSGIRequestHandler
+    WSGIRequestHandler.protocol_version = "HTTP/1.1"
     app.run_server(debug=True)
