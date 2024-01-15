@@ -87,7 +87,7 @@ app.layout = html.Div([
 )
 def update_graph(selected_cursos, selected_estados, selected_ies):
     if not selected_cursos or not selected_estados:
-        return px.bar(), px.bar(), px.bar(), "Total de Vagas: 0"
+        return px.bar(), px.bar(), px.bar(), "Selecione os filtros acima."
 
     selected_cursos = [selected_cursos] if isinstance(selected_cursos, str) else selected_cursos
     selected_estados = [selected_estados] if isinstance(selected_estados, str) else selected_estados
@@ -107,7 +107,7 @@ def update_graph(selected_cursos, selected_estados, selected_ies):
         ]
 
     if dff.empty:
-        return px.bar(), px.bar(), px.bar(), "Total de Vagas: 0"
+        return px.bar(), px.bar(), px.bar(), "Selecione os filtros acima."
 
     numero_vagas = dff.shape[0]
 
